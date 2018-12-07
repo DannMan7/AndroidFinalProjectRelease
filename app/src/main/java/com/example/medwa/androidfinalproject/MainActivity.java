@@ -11,6 +11,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,8 +19,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -34,12 +33,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import org.w3c.dom.Text;
-
 public class MainActivity extends AppCompatActivity {
 
-    EditText email;
-    EditText password;
+    TextInputEditText email;
+    TextInputEditText password;
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDatabase;
     private DatabaseReference myRef;
@@ -57,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
 
         mFusedLocationProvider = LocationServices.getFusedLocationProviderClient(this);
 
-        email = (EditText) findViewById(R.id.loginTxt);
-        password = (EditText) findViewById(R.id.passwordTxt2);
+        email = (TextInputEditText) findViewById(R.id.loginTxt);
+        password = (TextInputEditText) findViewById(R.id.passwordTxt2);
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
@@ -116,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
     public void registerClick(View view) {
         Intent intent = new Intent(this, RegisterScreen.class);
         startActivity(intent);
-        finish();
     }
 
     public void loginClick(View view) {

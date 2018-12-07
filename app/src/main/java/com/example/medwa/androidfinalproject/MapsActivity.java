@@ -39,6 +39,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private MapView mMapView;
     public Button mReportStatus;
+    private Button mBTN_Track;
     private ClusterManager<StatusMarkers> mClusterManager;
     private MyClusterManager mClusterManagerRenderer;
     private GoogleMap mGoogleMap;
@@ -69,6 +70,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         user = mAuth.getCurrentUser();
 
         mReportStatus = (Button) findViewById(R.id.reportStatusButton);
+        mBTN_Track = (Button) findViewById(R.id.BTN_Track);
 
         // *** IMPORTANT ***
         // MapView requires that the Bundle you pass contain _ONLY_ MapView SDK
