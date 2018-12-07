@@ -25,12 +25,12 @@ tools:context=".MainActivity">
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:textColorHint="@color/beige">>
+        android:textColorHint="@color/beige">
         <android.support.design.widget.TextInputEditText
             android:id="@+id/loginTxt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username"
+            android:hint="Email"
             android:textColor="@color/beige"
             android:drawableLeft="@drawable/ic_email_white_24dp"
             android:drawableStart="@drawable/ic_email_white_24dp"
