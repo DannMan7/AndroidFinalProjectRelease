@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean mLocationPermissionGranted = false;
     private FusedLocationProviderClient mFusedLocationProvider;
     private RouteInformation routeInfo;
+    private ProgressBar progressBar;
 
 
     @Override
@@ -60,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
         myRef = mDatabase.getReference();
-
+        progressBar = findViewById(R.id.PB_LOG);
 
     }
 
@@ -125,10 +127,12 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Email or Password field is empty!", Toast.LENGTH_SHORT).show();
         } else {
 
+            progressBar.setVisibility(View.VISIBLE);
             mAuth.signInWithEmailAndPassword(e, p).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()) {
+
                         Toast.makeText(MainActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
 
                         FirebaseUser user = mAuth.getCurrentUser();
@@ -137,11 +141,13 @@ public class MainActivity extends AppCompatActivity {
                         myRef.child(user.getUid()).child("long").setValue("");
 
 
-                        Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+                        Intent intent = new Intent(MainActivity.this, Settings.class);
                         startActivity(intent);
-                        finish();
+                        progressBar.setVisibility(View.GONE);
+                        //finish();
                     } else {
                         Toast.makeText(MainActivity.this, "Login Failed!", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
                     }
                 }
             });

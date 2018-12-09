@@ -29,6 +29,12 @@
             android:textSize="20sp"
             android:text=" your trail begins here!"
             android:textColor="@color/beige"/>
+        <ProgressBar
+            android:id="@+id/PB_CRE"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal" />
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -109,11 +115,5 @@
             android:textSize="16sp"
             android:text="Register"
             android:onClick="registerScreenClick"/>
-        <ProgressBar
-            android:id="@+id/PB_CRE"
-            android:visibility="gone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal" />
     </LinearLayout>
 </ScrollView>

@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +29,7 @@ public class RegisterScreen extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDatabase;
     private DatabaseReference myRef;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +44,8 @@ public class RegisterScreen extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
         myRef = mDatabase.getReference();
+
+        progressBar = findViewById(R.id.PB_CRE);
     }
 
     public void registerScreenClick(View view) {
@@ -57,6 +61,7 @@ public class RegisterScreen extends AppCompatActivity {
         }else {
 
             if(p.equals(cp)) {
+                progressBar.setVisibility(View.VISIBLE);
                 mAuth.createUserWithEmailAndPassword(e, cp).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -77,12 +82,14 @@ public class RegisterScreen extends AppCompatActivity {
                             finish();
                         } else {
                             Toast.makeText(RegisterScreen.this, "Registration Failed!", Toast.LENGTH_SHORT).show();
+                            progressBar.setVisibility(View.GONE);
                         }
                     }
                 });
             }
             else {
                 Toast.makeText(RegisterScreen.this, "Passwords do not match!", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
             }
         }
 

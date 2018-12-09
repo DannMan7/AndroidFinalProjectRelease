@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/lightgreen"
+    android:orientation="vertical"
+    tools:context=".Settings">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="48sp"
+        android:textColor="@color/beige"
+        android:gravity="center_horizontal"
+        android:text="@string/settings"/>
+    <LinearLayout
+        android:paddingTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:paddingEnd="10dp"
+            android:paddingRight="10dp"
+            android:text="@string/feet"
+            android:textColor="@color/beige"
+            android:textSize="18sp" />
+
+        <Switch
+            android:id="@+id/SwitchFeetMeter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:switchMinWidth="48dp"
+            android:gravity="center"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="start"
+            android:paddingLeft="10dp"
+            android:paddingStart="10dp"
+            android:text="@string/meter"
+            android:textColor="@color/beige"
+            android:textSize="18sp" />
+    </LinearLayout>
+    <LinearLayout
+        android:paddingTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:paddingEnd="10dp"
+            android:paddingRight="10dp"
+            android:text="@string/mile"
+            android:textColor="@color/beige"
+            android:textSize="18sp" />
+
+        <Switch
+            android:id="@+id/SwitchMileKilometer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:switchMinWidth="48dp"
+            android:gravity="center"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="start"
+            android:paddingLeft="10dp"
+            android:paddingStart="10dp"
+            android:text="@string/kilometer"
+            android:textColor="@color/beige"
+            android:textSize="18sp" />
+    </LinearLayout>
+    <LinearLayout
+        android:paddingTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:paddingEnd="10dp"
+            android:paddingRight="10dp"
+            android:text="@string/fahrenheit"
+            android:textColor="@color/beige"
+            android:textSize="18sp" />
+
+        <Switch
+            android:id="@+id/SwitchFahrenheitCelsius"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:switchMinWidth="48dp"
+            android:gravity="center"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="start"
+            android:paddingLeft="10dp"
+            android:paddingStart="10dp"
+            android:text="@string/celsius"
+            android:textColor="@color/beige"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/BTN_SignOut"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginLeft="36dp"
+        android:layout_marginRight="36dp"
+        android:layout_marginEnd="36dp"
+        android:background="@drawable/button_bg"
+        android:textColor="@color/beige"
+        android:textSize="24sp"
+        android:text="@string/SignOut" />
+
+</LinearLayout>

@@ -2,4 +2,14 @@
     <string name="app_name">AndroidFinalProject</string>
     <string name="title_activity_maps">Map</string>
     <string name="google_map_api_key">AIzaSyCQfUryFKRUJImu93n76TrmconWd2FZ7t0</string>
+    <!-- Settings Activity Strings -->
+    <string name="settings">Settings</string>
+    <string name="feet">Feet (Ft)</string>
+    <string name="meter">Meter (M)</string>
+    <string name="mile">Mile (Mi)</string>
+    <string name="kilometer">Kilometer (KM)</string>
+    <string name="fahrenheit">Fahrenheit (\u2109)</string>
+    <string name="celsius">Celsius (\u2103)</string>
+    <string name="SignOut">Sign Out!</string>
+    <!-- End Settings Activity Strings -->
 </resources>
