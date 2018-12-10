@@ -1,6 +1,9 @@
 package com.example.medwa.androidfinalproject;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -8,6 +11,8 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -17,29 +22,50 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.google.maps.android.clustering.ClusterManager;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Looper;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import org.w3c.dom.Text;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.UUID;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private MapView mMapView;
-    public Button mReportStatus;
-    private Button mBTN_Track;
+    private ImageButton mReportStatus; //Used for camera now
+    private ImageButton mBTN_Track;
+    private ImageButton mSettings;
     private ClusterManager<StatusMarkers> mClusterManager;
     private MyClusterManager mClusterManagerRenderer;
     private GoogleMap mGoogleMap;
@@ -49,7 +75,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private DatabaseReference myRef;
     private FirebaseUser user;
     private FusedLocationProviderClient mFusedLocationProvider;
-
+    private final static long UPDATE_INTERVAL = 4000;
+    private final static long FASTEST_INTERVAL = 2000;
+    Polyline mPolyline;
+    ArrayList<LatLng> mLocations;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_TAKE_PHOTO = 1;
+    ImageView mImageView;
+    Bitmap imageBitmap;
+    FirebaseStorage mStorage;
+    StorageReference mStorageRef;
+    String mCurrentPhotoPath;
+    Uri photoURI;
 
 
 
@@ -60,18 +97,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        mImageView = (ImageView)findViewById(R.id.debugImage);
+
+        mLocations = new ArrayList<>();
+
         mFusedLocationProvider = LocationServices.getFusedLocationProviderClient(this);
 
         //routeInfo = new RouteInformation();
+        mStorage = FirebaseStorage.getInstance();
+        mStorageRef = mStorage.getReference();
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
         myRef = mDatabase.getReference();
         user = mAuth.getCurrentUser();
 
-        mReportStatus = (Button) findViewById(R.id.reportStatusButton);
-        mBTN_Track = (Button) findViewById(R.id.BTN_Track);
+        mReportStatus = (ImageButton) findViewById(R.id.reportStatusButton); //Used for camera now
+        mBTN_Track = (ImageButton) findViewById(R.id.BTN_Track);
+        mSettings = (ImageButton)findViewById(R.id.settingsButton);
 
+        //region Important Map Stuff
         // *** IMPORTANT ***
         // MapView requires that the Bundle you pass contain _ONLY_ MapView SDK
         // objects or sub-Bundles.
@@ -83,17 +128,65 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMapView.onCreate(mapViewBundle);
 
         mMapView.getMapAsync(this);
+        //endregion
 
+        //region Tracking Button
+        mBTN_Track.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                startLocationUpdates();
+
+            }
+        });
+        //endregion
+
+        //region Camera Button
         mReportStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                Log.d("mReportStatus Button","Button was clicked.");
-                addStatusMarkers();
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                // Ensure that there's a camera activity to handle the intent
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    // Create the File where the photo should go
+                    File photoFile = null;
+                    try {
+                        photoFile = createImageFile();
+                    } catch (IOException ex) {
+                        // Error occurred while creating the File
+                    }
+                    // Continue only if the File was successfully created
+                    if (photoFile != null) {
+                        photoURI = FileProvider.getUriForFile(MapsActivity.this, "com.example.medwa.androidfinalproject", photoFile);
+                        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                        startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+
+
+                    }
+                }
+                StorageReference ref = mStorageRef.child("photos/"+ UUID.randomUUID().toString());
+                ref.putFile(photoURI);
+                //StorageReference mRef = mStorageRef.child("photos/");
+                //mRef.putFile(photoURI);
+
+                //addStatusMarkers();
 
             }
         });
+        //endregion
 
+        //region Settings Button
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MapsActivity.this, Settings.class);
+                startActivity(intent);
+            }
+        });
+        //endregion
+
+        //region Updates Database on Initilization and Value Changes
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -110,10 +203,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                     mClusterManager.clearItems();
 
+                    //Iterates through database and updates the map with markers
                     for (DataSnapshot ds : dataSnapshot.getChildren()) {
 
                         RouteInformation routeInfo = new RouteInformation();
-
 
                         try {
                             routeInfo.setLatitude((Double) ds.child("lat").getValue());
@@ -133,6 +226,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
 
                 }
+                //Populates the map
                 mClusterManager.cluster();
             }
 
@@ -143,6 +237,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
+        //endregion
+
     }
 
 
@@ -304,4 +400,69 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+    //region Method used for tracking location
+    private void startLocationUpdates() {
+        LocationRequest mLocationRequestHighAccuracy = new LocationRequest();
+        mLocationRequestHighAccuracy.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequestHighAccuracy.setInterval(UPDATE_INTERVAL);
+        mLocationRequestHighAccuracy.setFastestInterval(FASTEST_INTERVAL);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mFusedLocationProvider.requestLocationUpdates(mLocationRequestHighAccuracy, new LocationCallback(){
+                    @Override
+                    public void onLocationResult(LocationResult result){
+
+                        Location location = result.getLastLocation();
+
+                        if(location != null){
+                            LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
+                            mLocations.add(latLng);
+
+                            myRef.child(user.getUid()).child("lat").setValue(location.getLatitude());
+                            myRef.child(user.getUid()).child("long").setValue(location.getLongitude());
+
+                            PolylineOptions options = new PolylineOptions().color(Color.BLUE);
+                            for(int i=0;i<mLocations.size();i++){
+                                options.add(mLocations.get(i));
+                            }
+                            mPolyline = mGoogleMap.addPolyline(options);
+
+
+                            //mPolyline = mGoogleMap.addPolyline(new PolylineOptions().clickable(true).add(
+                            //        new LatLng(location.getLatitude(), location.getLongitude())
+                            // ));
+
+                        }
+                    }
+                },
+                Looper.myLooper());
+    }
+    //endregion
+
+
+    //region Creates path for camera images
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+    //endregion
 }

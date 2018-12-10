@@ -137,11 +137,11 @@ public class MainActivity extends AppCompatActivity {
 
                         FirebaseUser user = mAuth.getCurrentUser();
 
-                        myRef.child(user.getUid()).child("lat").setValue("");
-                        myRef.child(user.getUid()).child("long").setValue("");
+                        myRef.child(user.getUid()).child("lat").setValue(routeInfo.getLatitude());
+                        myRef.child(user.getUid()).child("long").setValue(routeInfo.getLongitude());
 
 
-                        Intent intent = new Intent(MainActivity.this, Settings.class);
+                        Intent intent = new Intent(MainActivity.this, MapsActivity.class);
                         startActivity(intent);
                         progressBar.setVisibility(View.GONE);
                         //finish();
