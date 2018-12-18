@@ -201,10 +201,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = new File(storageDir.getPath() + File.separator + "IMG_"+ timeStamp + ".jpg");
-        Log.d("imageFileName:", imageFileName);
-        Log.d("image absolute path", image.toString());
-        Log.d("Storage Dir", storageDir.toString());
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
         mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }

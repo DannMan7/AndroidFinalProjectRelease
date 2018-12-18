@@ -23,6 +23,9 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -52,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 200;
     final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 200;
 
+    private AdView mAdView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +74,12 @@ public class MainActivity extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance();
         myRef = mDatabase.getReference();
         progressBar = findViewById(R.id.PB_LOG);
+
+        // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
+        MobileAds.initialize(MainActivity.this, "ca-app-pub-3940256099942544~334751171");
+        mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
     }
 
