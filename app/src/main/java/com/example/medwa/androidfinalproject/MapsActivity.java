@@ -15,7 +15,6 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -28,46 +27,27 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.google.maps.android.clustering.ClusterManager;
-
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.media.Image;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -75,66 +55,74 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
-
+// Map View Activity
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+    // File and URI Declarations
     File photoFile = null;
     Uri photoURI;
+    // MapView Declaration
     private MapView mMapView;
+    // ImageButton Declarations
     private ImageButton mReportStatus; //Used for camera now
     private ImageButton mBTN_Track;
     private ImageButton mSettings;
+    // ClusterManager for Status Markers Declarations
     private ClusterManager<StatusMarkers> mClusterManager;
     private MyClusterManager mClusterManagerRenderer;
+    // GoogleMap Declaration
     private GoogleMap mGoogleMap;
-    //private RouteInformation routeInfo;
+    // FireBase Declarations
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDatabase;
     private DatabaseReference myRef;
     private FirebaseUser user;
+    // FusedLocation Declaration
     private FusedLocationProviderClient mFusedLocationProvider;
+    // Permission Overrides
     private final static long UPDATE_INTERVAL = 4000;
     private final static long FASTEST_INTERVAL = 2000;
+    // Polyline Declaration used for Google Maps
     Polyline mPolyline;
+    // ArrayList of Longitude and Latitudes Declaration
     ArrayList<LatLng> mLocations;
+    // Permission Overrides
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_TAKE_PHOTO = 1;
+    // ImageView Declaration
     ImageView mImageView;
-    Bitmap imageBitmap;
+    // FireBase Storage and Reference Declaration
     FirebaseStorage mStorage;
     StorageReference mStorageRef;
+    // String Declarations
     String mCurrentPhotoPath;
     StorageReference mStorage2;
-    static final int CAMERA_REQUEST_CODE = 1;
-    private ProgressDialog mProgress;
-    ImageView newPic;
-    Uri uri;
-    Button takePic;
+    // MapView Bundle Key for API
     private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
-    private static final int MY_CAMERA_REQUEST_CODE = 100;
+    ProgressDialog mProgress;
 
+    // OnCreate called
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
+        // Assign ImageView with corresponding XML ID
         mImageView = (ImageView) findViewById(R.id.debugImage);
-        //newPic = (ImageView) findViewById(R.id.newPic);
-
+        // Associate ArrayList with new instance of ArrayList
         mLocations = new ArrayList<>();
-
+        // Get Locations for Device
         mFusedLocationProvider = LocationServices.getFusedLocationProviderClient(this);
-
-        //routeInfo = new RouteInformation();
+        // FireBase Storage Assignments
         mStorage = FirebaseStorage.getInstance();
         mStorageRef = mStorage.getReference();
         mStorage2 = FirebaseStorage.getInstance().getReference();
+        // Progress Dialog assignment
         mProgress = new ProgressDialog(this);
-
+        // FireBase Authentication and Database Assignments
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
         myRef = mDatabase.getReference();
         user = mAuth.getCurrentUser();
-
+        // ImageButton Assigned to corresponding XML IDs
         mReportStatus = (ImageButton) findViewById(R.id.reportStatusButton); //Used for camera now
         mBTN_Track = (ImageButton) findViewById(R.id.BTN_Track);
         mSettings = (ImageButton) findViewById(R.id.settingsButton);
@@ -147,9 +135,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (savedInstanceState != null) {
             mapViewBundle = savedInstanceState.getBundle(MAPVIEW_BUNDLE_KEY);
         }
+        // Assigns MapView to corresponding XML ID
         mMapView = (MapView) findViewById(R.id.mapView);
         mMapView.onCreate(mapViewBundle);
-
         mMapView.getMapAsync(this);
         //endregion
 
@@ -157,15 +145,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mBTN_Track.setOnClickListener(v -> startLocationUpdates());
 
         //region Camera Button
-        //mReportStatus.setOnClickListener(new View.OnClickListener() {
+        // Camera onClickListener
         mReportStatus.setOnClickListener(v->{dispatchTakePictureIntent();});
-
+        // Button to go to settings
         mSettings.setOnClickListener(v -> {
             Intent intent = new Intent(MapsActivity.this, Settings.class);
             startActivity(intent);
         });
     }
 
+    // Take Pictures Intent
     private void dispatchTakePictureIntent() {
         Toast.makeText(this, "DISPATCH PICTURES CALLED!", Toast.LENGTH_SHORT).show();
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -192,9 +181,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             Toast.makeText(this, "PHOTO FILE IS NULL!", Toast.LENGTH_SHORT).show();
         }
     }
-
-
-
+    // Create Image File from Camera Intent
     private File createImageFile() throws IOException {
         Toast.makeText(this, "CREATE IMAGE CALLED!", Toast.LENGTH_SHORT).show();
         // Create an image file name
@@ -206,10 +193,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
+        // Gets absolute path of current Image
         mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
-
+    // onActivityResult called attempts to upload captured picture FireBase Storage
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Toast.makeText(this, "ACTIVITY RESULT CALLED!", Toast.LENGTH_SHORT).show();
@@ -233,8 +221,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             });
         }
-
-
         //endregion
 
         //region Settings Button
@@ -299,7 +285,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-
+    // Add Status Markers Method
     private void addStatusMarkers () {
         Log.d("mReportStatus Button", "addStatusMarkers was called.");
 
@@ -311,51 +297,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         myRef.child(user.getUid()).child("bus").setValue("N70 Bus");
         myRef.child(user.getUid()).child("status").setValue("Running Late");
         myRef.child(user.getUid()).child("avatar").setValue(image);
-
-        // myRef.child(user.getUid()).child("lat").setValue(routeInfo.getLatitude());
-        //myRef.child(user.getUid()).child("long").setValue(routeInfo.getLongitude());
-
-
-       /* if(mGoogleMap != null){
-
-            if(mClusterManager == null){
-                mClusterManager = new ClusterManager<StatusMarkers>(this.getApplicationContext(), mGoogleMap);
-            }
-            if(mClusterManagerRenderer == null){
-                mClusterManagerRenderer = new MyClusterManager(this, mGoogleMap, mClusterManager);
-                mClusterManager.setRenderer(mClusterManagerRenderer);
-            }
-
-                try{
-                    String snippet = "";
-                    //TODO: Create another list view for statuses/snippets
-                    snippet = "Running Late";
-
-                    int avatar = R.drawable.delayed_bus; // set the default avatar
-
-                    StatusMarkers newStatusMarker = new StatusMarkers(new LatLng(routeInfo.getLatitude(), routeInfo.getLongitude()),routeInfo.getBus(), snippet, avatar );
-
-                    mClusterManager.addItem(newStatusMarker);
-
-                    FirebaseUser user = mAuth.getCurrentUser();
-
-                    myRef.child(user.getUid()).child("avatar").setValue(avatar);
-                    myRef.child(user.getUid()).child("lat").setValue(routeInfo.getLatitude());
-                    myRef.child(user.getUid()).child("long").setValue(routeInfo.getLongitude());
-                    myRef.child(user.getUid()).child("status").setValue(snippet);
-
-                    Log.d("mReportStatus Button", "Marker was created.");
-
-                }catch (NullPointerException e){
-                    Log.e("AddMapMarkers: ", "addMapMarkers: NullPointerException: " + e.getMessage() );
-                }
-
-            mClusterManager.cluster();
-
-        }*/
     }
 
-
+    // onSaveInstanceState called
     @Override
     public void onSaveInstanceState (Bundle outState){
         super.onSaveInstanceState(outState);
@@ -369,24 +313,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMapView.onSaveInstanceState(mapViewBundle);
     }
 
+    // onResume called
     @Override
     public void onResume () {
         super.onResume();
         mMapView.onResume();
     }
 
+    // onStart called
     @Override
     public void onStart () {
         super.onStart();
         mMapView.onStart();
     }
 
+    // onStop called
     @Override
     public void onStop () {
         super.onStop();
         mMapView.onStop();
     }
 
+    // onMapReady called
     @Override
     public void onMapReady (GoogleMap map){
         mGoogleMap = map;
@@ -408,24 +356,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    // onPause called
     @Override
     public void onPause () {
         mMapView.onPause();
         super.onPause();
     }
 
+    // onDestroy called
     @Override
     public void onDestroy () {
         mMapView.onDestroy();
         super.onDestroy();
     }
 
+    // onLowMemory called
     @Override
     public void onLowMemory () {
         super.onLowMemory();
         mMapView.onLowMemory();
     }
 
+    // Gets Location as long as Permissions allow
     public void getLocation () {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling

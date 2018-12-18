@@ -4,12 +4,9 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.hardware.camera2.CameraManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputEditText;
@@ -18,11 +15,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
@@ -37,45 +32,57 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
-import static java.security.AccessController.getContext;
-
+// Main Login Activity
 public class MainActivity extends AppCompatActivity {
 
+    // TextInputEditText Declarations
     TextInputEditText email;
     TextInputEditText password;
+    // FireBase Declarations
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDatabase;
     private DatabaseReference myRef;
+    // Permission Location Boolean Declaration
     private boolean mLocationPermissionGranted = false;
+    // Fused Location Declaration
     private FusedLocationProviderClient mFusedLocationProvider;
+    // Route Info Declaration
     private RouteInformation routeInfo;
+    // Progress Bar Declaration
     private ProgressBar progressBar;
+    // Permission Overriding
     final static int MY_PERMISSIONS_REQUEST_CAMERA = 200;
     final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 200;
     final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 200;
-
+    // AdView for AdMob
     private AdView mAdView;
 
 
+    // OnCreate Called
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Update with new RouteInformation
         routeInfo = new RouteInformation();
 
+        // Get new fused location from device
         mFusedLocationProvider = LocationServices.getFusedLocationProviderClient(this);
 
+        // Assign TextInputEditTexts with corresponding XML ID's
         email = (TextInputEditText) findViewById(R.id.loginTxt);
         password = (TextInputEditText) findViewById(R.id.passwordTxt2);
 
+        // FireBase linkage
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
         myRef = mDatabase.getReference();
+
+        // Assign ProgressBar to corresponding XML ID
         progressBar = findViewById(R.id.PB_LOG);
 
-        // Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713
+        // AdMob Initialization
         MobileAds.initialize(MainActivity.this, "ca-app-pub-3940256099942544~334751171");
         mAdView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
@@ -83,10 +90,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // OnResume Called
     @Override
     protected void onResume() {
         super.onResume();
 
+        // Checks to see if permissions are already granted and gets current information
         if (checkMapServices()) {
             if (!mLocationPermissionGranted) {
                 getLocationPermission();
@@ -99,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Gets Location of device but checks to see if it has permissions to do so first
     public void getLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -111,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // As long as the permissions are granted the location will update to the current context
         mFusedLocationProvider.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
             @Override
             public void onComplete(@NonNull Task<Location> task) {
@@ -129,21 +140,23 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Create Account Button Click calls from XML
     public void registerClick(View view) {
         Intent intent = new Intent(this, RegisterScreen.class);
         startActivity(intent);
     }
-
+    // Login Button Click calls from XML
     public void loginClick(View view) {
         String e = email.getText().toString();
         String p = password.getText().toString();
 
-
+        // Checks to make sure both EditTexts are entered with information
         if (TextUtils.isEmpty(e) || TextUtils.isEmpty(p)) {
 
             Toast.makeText(this, "Email or Password field is empty!", Toast.LENGTH_SHORT).show();
         } else {
 
+            // Progress bar becomes visible that way the User knows if they are logging in or not.
             progressBar.setVisibility(View.VISIBLE);
             mAuth.signInWithEmailAndPassword(e, p).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                 @Override
@@ -152,14 +165,18 @@ public class MainActivity extends AppCompatActivity {
 
                         Toast.makeText(MainActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
 
+                        // When the task is successful the User's information will then be updated
+                        // with the current latitude and longitude
                         FirebaseUser user = mAuth.getCurrentUser();
 
                         myRef.child(user.getUid()).child("lat").setValue(routeInfo.getLatitude());
                         myRef.child(user.getUid()).child("long").setValue(routeInfo.getLongitude());
 
-
+                        // New Intent will send the User to the MapView Activity
                         Intent intent = new Intent(MainActivity.this, MapsActivity.class);
                         startActivity(intent);
+                        // Progress Bar is set to gone that way if the User logs out they will not
+                        // see and infinitely scrolling progress bar
                         progressBar.setVisibility(View.GONE);
                         //finish();
                     } else {
@@ -172,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    // Checking of permissions before login can happen
     private boolean checkMapServices() {
         if (isServicesOK()) {
             if (isMapsEnabled()) {
@@ -187,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    // Checks to see if user Enabled GPS
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("GPS services are required for this app to function properly. Turn it on?")
@@ -199,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
+    // Checks to see if User Enabled Camera
     public boolean isCameraEnabled() {
 
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -228,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    // Checks to see if User allowed writable storage
     public boolean isSaveableEnabled() {
 
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -257,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    // Checks to see if user allowed readable storage
     public boolean isReadableEnabled() {
 
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -285,6 +307,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return true;
     }
+    // Checks to see if user allowed GPS location
     public boolean isMapsEnabled() {
         final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -295,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
 
         return true;
     }
-
+    // Gets the Location Permission
     private void getLocationPermission() {
         if (ContextCompat.checkSelfPermission(this.getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mLocationPermissionGranted = true;
@@ -304,6 +327,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Checks to make sure Google Play services are available
     public boolean isServicesOK() {
         int available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(MainActivity.this);
 
@@ -318,6 +342,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    // Checks to make sure permissions are correct before continuing
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         mLocationPermissionGranted = false;
@@ -332,6 +357,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Check to make sure permissions are correct before continuing
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -344,8 +370,4 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-
 }
-
-
